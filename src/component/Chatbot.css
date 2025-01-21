@@ -1,0 +1,337 @@
+/* Chatbot Container */
+.chatbot-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 400px;
+  font-family: Arial, sans-serif;
+  z-index: 1000;
+}
+
+/* Chatbot Content */
+.chatbot-content {
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 10px;
+  padding: 20px;
+  max-height: 500px;
+  overflow-y: auto;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Chatbot Header */
+.chatbot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #075cdc; /* Light Blue */
+  color: white;
+  padding: 5px;
+  border-radius: 10px 10px 0 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* Close Button */
+.close-chatbot {
+  background: #FF4C4C; /* Red */
+  border: none;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-chatbot:hover {
+  background: #D43F3F;
+}
+/* Chatbot Toggle Button */
+.chatbot-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #046cdb;
+  border: none;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  font-size: 40px;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover effect for better visibility */
+.chatbot-toggle:hover {
+  background: #0056b3;
+  transform: scale(1.1);
+}
+
+/* Animation when chatbot opens */
+.chatbot-container.open .chatbot-toggle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chatbot-toggle {
+    width: 60px;
+    height: 60px;
+    font-size: 30px;
+    bottom: 15px;
+    right: 15px;
+  }
+}
+
+
+.add-to-basket {
+  padding: 10px 15px;
+  align-items: center;
+  border: none;
+  border-radius: 5px;
+  background-color: #f48638;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.add-to-basket:hover {
+  background-color: #febc22;
+}
+
+/* Category Section */
+.category-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+/* Category Button */
+.category-button {
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(to right, #5CA8C8, #3A92A8);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s ease, background 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.category-button:hover {
+  background: #0652f7;
+  transform: translateY(-2px);
+}
+
+/* Filter Section */
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+}
+.book-card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 15px;
+  margin: 15px 0;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-center;
+  text-align: left;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.book-card:hover {
+  transform: scale(1.05);
+  background-color: #f8f8f8;
+}
+
+.book-image {
+  width: 100px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  align-self: center;
+}
+
+.book-card h5 {
+  margin: 5px 0;
+  font-size: 18px;
+  color: #007bff;
+  font-weight: bold;
+}
+
+.book-card p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.book-card p span {
+  font-weight: bold;
+  color: #333;
+}
+/* Filter Group */
+.filter-group {
+  text-align: center;
+}
+
+/* Filter Label */
+.filter-label {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+/* Filter Buttons Layout */
+.filter-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Filter Button */
+.filter-button {
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  background-color: #87CEEB; /* Light Blue */
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filter-button:hover {
+  background-color: #5CA8C8;
+}
+
+/* Footer Section */
+.chatbot-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-top: 1px solid #ddd;
+  border-radius: 0 0 10px 10px;
+}
+
+/* Input Wrapper */
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+  flex-grow: 1;
+}
+
+.input-wrapper input[type="text"] {
+  flex-grow: 1;
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  outline: none;
+}
+
+/* Upload Icon */
+.upload-icon {
+  padding: 12px;
+  font-size: 20px;
+  color: #555;
+  cursor: pointer;
+  background: #eaeaea;
+  border-right: 1px solid #ccc;
+}
+
+.upload-icon:hover {
+  color: #007bff;
+}
+
+/* Footer Buttons */
+.footer-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.send-button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.send-button:hover {
+  background-color: #0056b3;
+}
+
+.close-chatbot {
+  padding: 12px 20px;
+  background-color: #ff4d4d;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.close-chatbot:hover {
+  background-color: #cc0000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chatbot-container {
+    width: 100%;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+  }
+
+  .chatbot-content {
+    max-height: 400px;
+  }
+
+  .category-section {
+    grid-template-columns: repeat(1, 1fr); /* Full width on smaller screens */
+  }
+
+  .filter-buttons-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .footer-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+}

@@ -1,0 +1,31 @@
+.recommendations__carousel {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa; /* Light background for separation */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .recommendations__carousel .slick-slide {
+    display: flex; /* Ensure slides are properly aligned */
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .slick-prev:before,
+  .slick-next:before {
+    color: #333; /* Customize the color of the arrows */
+  }
+  
+  .slick-dots li button:before {
+    color: #999; /* Dot color */
+  }
+  
+  .slick-dots li.slick-active button:before {
+    color: #007bff; /* Active dot color */
+  }
+  
+  .slick-track {
+    display: flex; /* Ensures proper alignment of items */
+  }
+  
