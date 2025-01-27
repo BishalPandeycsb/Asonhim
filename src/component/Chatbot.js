@@ -1,38 +1,60 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useStateValue } from "./StateProvider";
-import { processImage, processText } from "./process";
 import axios from "axios";
-import "./Chatbot.css";
+import {
+  Bot,
+  X,
+  Send,
+  ChevronUp,
+  ChevronDown,
+  Search,
+  BookOpen,
+} from "lucide-react";
 
-const Chatbot = () => {
+const EnhancedChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [categories, setCategories] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [books, setBooks] = useState([]);
-  const [{ basket }, dispatch] = useStateValue([]);
-  const [selectedFilters, setSelectedFilters] = useState({});
-  const [inputText, setInputText] = useState("");
-  const [showDefaultOptions, setShowDefaultOptions] = useState(false); // To toggle default options
-  const [showFilters, setShowFilters] = useState(false); // To toggle filters visibility
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+  const [showCategories, setShowCategories] = useState(false);
+  const messagesEndRef = useRef(null);
+  const [{ basket }, dispatch] = useStateValue();
 
   const API_URL = "https://aqueous-tiaga-699bfea4a0d8.herokuapp.com";
 
+  const suggestions = [
+    "Show me popular books",
+    "I need book recommendations",
+    "What are the best-selling books?",
+    "Show categories",
+    "Find books by genre",
+    "Help me find a book",
+  ];
+
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      // Display welcome message when chatbot is opened
-      setMessages([
-        {
-          user: "Bot",
-          text: "Hey, I am Abbot! How can I help you with the books today?",
-        },
-      ]);
+      const welcomeMessage = {
+        type: "bot",
+        content:
+          "Hello! I'm your personal book assistant. How can I help you today?",
+        timestamp: new Date().toISOString(),
+      };
+      setMessages([welcomeMessage]);
       fetchCategories();
     }
   }, [isOpen]);
 
-  const toggleChatbot = () => {
-    setIsOpen(!isOpen);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const fetchCategories = async () => {
@@ -44,330 +66,242 @@ const Chatbot = () => {
     }
   };
 
-  const handleCategorySelection = (category) => {
-    if (category.Product === "Books") {
-      setSelectedCategory(category.Product);
-      setSelectedFilters({});
-      setBooks([]);
-      setShowFilters(true); // Show filters when Books category is selected
+  const simulateTyping = async (callback) => {
+    setIsTyping(true);
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000 + Math.random() * 1000)
+    );
+    setIsTyping(false);
+    callback();
+  };
+
+  const handleUserMessage = async (text) => {
+    const userMessage = {
+      type: "user",
+      content: text,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setInputText("");
+    setShowSuggestions(false);
+
+    simulateTyping(() => processUserMessage(text));
+  };
+
+  const processUserMessage = async (text) => {
+    const lowerText = text.toLowerCase();
+
+    if (lowerText.includes("popular") || lowerText.includes("best-selling")) {
+      const response = "Here are some popular books you might enjoy:";
+      await fetchBooks({ sort: "rating", order: "desc", limit: 5 });
+      addBotMessage(response);
+    } else if (
+      lowerText.includes("recommend") ||
+      lowerText.includes("suggestion")
+    ) {
+      addBotMessage(
+        "I'd be happy to recommend some books! What genres interest you? (Fiction, Non-fiction, Mystery, etc.)"
+      );
+      setShowSuggestions(true);
+    } else if (
+      lowerText.includes("category") ||
+      lowerText.includes("categories")
+    ) {
+      setShowCategories(true);
+      addBotMessage(
+        "Here are all our categories. Click on any category to explore:"
+      );
+    } else if (lowerText.includes("find")) {
+      addBotMessage(
+        "I can help you find books! Would you like to search by genre, author, or browse our recommendations?"
+      );
+      setShowSuggestions(true);
+    } else if (lowerText.includes("help")) {
+      addBotMessage(
+        "I can help you with:\n- Finding specific books\n- Book recommendations\n- Browsing categories\n- Viewing popular books\n- Finding books by genre\nWhat would you like to do?"
+      );
     } else {
-      window.location.href = `https://ashim-project.vercel.app/Category/${category.Product}`;
+      addBotMessage(
+        "I'm not quite sure what you're looking for. Would you like to:\n1. Browse categories\n2. Get book recommendations\n3. Search for specific books"
+      );
     }
   };
 
-  const handleFilterSelection = (key, value) => {
-    setSelectedFilters((prevFilters) => {
-      let updatedFilters = { ...prevFilters };
-
-      if (key === "rating") {
-        updatedFilters["minRating"] = value;
-        updatedFilters["maxRating"] = 5;
-      } else if (key === "price") {
-        updatedFilters["minPrice"] = value.min;
-        updatedFilters["maxPrice"] = value.max;
-      } else {
-        updatedFilters[key] = value;
-      }
-
-      fetchFilteredBooks(updatedFilters);
-      return updatedFilters;
-    });
-  };
-
-  const addToBasket = (book) => {
-    const item = {
-      id: book._id,
-      title: book.title,
-      image: book.image || "https://via.placeholder.com/150",
-      price: book.price || "N/A",
-      rating: book.rating || 0,
-      genre: book.genres || "Unknown",
+  const addBotMessage = (content) => {
+    const botMessage = {
+      type: "bot",
+      content,
+      timestamp: new Date().toISOString(),
     };
-
-    alert(`Added to basket: ${item.title} (Genre: ${item.genre})`);
-    dispatch({
-      type: "ADD_TO_BASKET",
-      item,
-    });
+    setMessages((prev) => [...prev, botMessage]);
   };
 
-  const fetchFilteredBooks = async (filters) => {
-    const queryParams = new URLSearchParams(filters).toString();
+  const fetchBooks = async (params = {}) => {
     try {
-      const { data } = await axios.get(
-        `${API_URL}/category/Books?${queryParams}`
-      );
+      const { data } = await axios.get(`${API_URL}/category/Books`, { params });
       setBooks(data);
     } catch (error) {
       console.error("Error fetching books:", error);
     }
   };
 
-  const handleUserMessage = async (text) => {
-    // Add user message to the chat
-    setMessages((prevMessages) => [...prevMessages, { user: "User", text }]);
-
-    // Process the user message and get bot response
-    const botResponse = await getBotResponse(text);
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { user: "Bot", text: botResponse },
-    ]);
-
-    // Clear input after sending
-    setInputText("");
+  const addToBasket = (book) => {
+    dispatch({
+      type: "ADD_TO_BASKET",
+      item: {
+        id: book._id,
+        title: book.title,
+        image: book.image || "https://via.placeholder.com/150",
+        price: book.price || "N/A",
+        rating: book.rating || 0,
+        genre: book.genres?.[0] || "Unknown",
+      },
+    });
+    addBotMessage(
+      `Great choice! "${book.title}" has been added to your basket. Would you like more recommendations?`
+    );
   };
 
-  const getBotResponse = async (userMessage) => {
-    // Simple response logic based on user input
-    if (
-      userMessage.toLowerCase().includes("hello") ||
-      userMessage.toLowerCase().includes("hi")
-    ) {
-      return "Hello! How can I assist you with books today?";
-    } else if (userMessage.toLowerCase().includes("recommend")) {
-      return "Sure! What genre are you interested in? (e.g., Fiction, Non-fiction, Travel)";
-    } else if (userMessage.toLowerCase().includes("show categories")) {
-      setShowDefaultOptions(true); // Show default categories
-      return "Here are the available categories:";
-    } else if (userMessage.toLowerCase().includes("hide categories")) {
-      setShowDefaultOptions(false); // Hide default categories
-      return "Categories are now hidden. How else can I assist you?";
-    } else if (userMessage.toLowerCase().includes("hide filters")) {
-      setShowFilters(false); // Hide filters
-      return "Filters are now hidden. How else can I assist you?";
-    } else {
-      return "I'm here to help you with books. Could you please provide more details?";
-    }
-  };
-
-  const filterOptions = {
-    genre: [
-      "Fiction",
-      "Non-fiction",
-      "Travel",
-      "Sports",
-      "Business",
-      "Science Fiction",
-      "History",
-      "Finance",
-    ],
-    language: ["English", "Spanish", "Portuguese", "Italian", "German"],
-    rating: ["1", "2", "3", "4", "5"],
-    price: [
-      { label: "0-100", min: 0, max: 100 },
-      { label: "100-200", min: 100, max: 200 },
-      { label: "200-300", min: 200, max: 300 },
-      { label: "300+", min: 300, max: 500 },
-    ],
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    addBotMessage(
+      `You've selected ${category.Product}. Let me show you some items from this category.`
+    );
+    fetchBooks({ category: category.Product });
+    setShowCategories(false);
   };
 
   return (
-    <div
-      style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 1000 }}
-    >
+    <div className="fixed bottom-6 right-6 z-50">
       {!isOpen ? (
         <button
-          onClick={toggleChatbot}
-          style={{
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "50%",
-            width: "60px",
-            height: "60px",
-            fontSize: "24px",
-            cursor: "pointer",
-            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
-          }}
+          onClick={() => setIsOpen(true)}
+          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-transform hover:scale-110"
         >
-          🤖
+          <Bot size={24} />
         </button>
       ) : (
-        <div
-          style={{
-            width: "350px",
-            backgroundColor: "#fff",
-            borderRadius: "10px",
-            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
-            display: "flex",
-            flexDirection: "column",
-            maxHeight: "500px",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              padding: "10px",
-              backgroundColor: "#007bff",
-              color: "white",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span>Abbot - Book Assistant</span>
+        <div className="bg-white rounded-lg shadow-xl w-96 max-h-[600px] flex flex-col">
+          <div className="bg-blue-500 p-4 rounded-t-lg flex justify-between items-center">
+            <div className="flex items-center gap-2 text-white">
+              <Bot size={24} />
+              <span className="font-semibold">Book Assistant</span>
+            </div>
             <button
-              onClick={toggleChatbot}
-              style={{
-                backgroundColor: "transparent",
-                border: "none",
-                color: "white",
-                fontSize: "16px",
-                cursor: "pointer",
-              }}
+              onClick={() => setIsOpen(false)}
+              className="text-white hover:bg-blue-600 rounded-full p-1"
             >
-              ✖
+              <X size={20} />
             </button>
           </div>
 
-          <div
-            style={{
-              flex: 1,
-              padding: "10px",
-              overflowY: "auto",
-              borderBottom: "1px solid #ddd",
-            }}
-          >
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message, index) => (
               <div
                 key={index}
-                style={{
-                  marginBottom: "10px",
-                  textAlign: message.user === "User" ? "right" : "left",
-                }}
+                className={`flex ${
+                  message.type === "user" ? "justify-end" : "justify-start"
+                }`}
               >
                 <div
-                  style={{
-                    display: "inline-block",
-                    padding: "8px 12px",
-                    borderRadius: "10px",
-                    backgroundColor:
-                      message.user === "User" ? "#007bff" : "#f1f1f1",
-                    color: message.user === "User" ? "white" : "black",
-                    maxWidth: "80%",
-                  }}
+                  className={`max-w-[80%] p-3 rounded-lg ${
+                    message.type === "user"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
                 >
-                  <strong>{message.user}:</strong> {message.text}
+                  {message.content}
                 </div>
               </div>
             ))}
+            {isTyping && (
+              <div className="flex gap-2 text-gray-500">
+                <div className="animate-bounce">●</div>
+                <div className="animate-bounce delay-100">●</div>
+                <div className="animate-bounce delay-200">●</div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
 
-          {showDefaultOptions && (
-            <div style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-              {!selectedCategory ? (
-                <div>
-                  <h4>Categories</h4>
-                  {categories.map((category) => (
-                    <button
-                      key={category._id}
-                      onClick={() => handleCategorySelection(category)}
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        padding: "8px",
-                        margin: "5px 0",
-                        backgroundColor: "#f1f1f1",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {category.Product}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div>
-                  <h4>Filters</h4>
-                  {showFilters && (
-                    <>
-                      {Object.entries(filterOptions).map(([key, options]) => (
-                        <div key={key}>
-                          <div style={{ fontWeight: "bold", margin: "5px 0" }}>
-                            {key.charAt(0).toUpperCase() + key.slice(1)}
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              flexWrap: "wrap",
-                              gap: "5px",
-                            }}
-                          >
-                            {options.map((option) => (
-                              <button
-                                key={option.label || option}
-                                onClick={() =>
-                                  handleFilterSelection(
-                                    key,
-                                    option.label || option
-                                  )
-                                }
-                                style={{
-                                  padding: "5px 10px",
-                                  backgroundColor: "#f1f1f1",
-                                  border: "none",
-                                  borderRadius: "5px",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                {option.label || option}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => setShowFilters(false)}
-                        style={{
-                          marginTop: "10px",
-                          padding: "8px 12px",
-                          backgroundColor: "#007bff",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Hide Filters
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
+          {showCategories && (
+            <div className="border-t border-gray-200 max-h-48 overflow-y-auto">
+              <div className="p-2 grid grid-cols-2 gap-2">
+                {categories.map((category) => (
+                  <button
+                    key={category._id}
+                    onClick={() => handleCategorySelect(category)}
+                    className="bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-lg p-3 text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                  >
+                    <BookOpen size={16} />
+                    {category.Product}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
-          <div style={{ padding: "10px", display: "flex", gap: "10px" }}>
-            <input
-              type="text"
-              placeholder="Type a message..."
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyPress={(e) =>
-                e.key === "Enter" && handleUserMessage(inputText)
-              }
-              style={{
-                flex: 1,
-                padding: "8px",
-                border: "1px solid #ddd",
-                borderRadius: "5px",
-              }}
-            />
-            <button
-              onClick={() => handleUserMessage(inputText)}
-              style={{
-                padding: "8px 12px",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-            >
-              Send
-            </button>
+          {showSuggestions && (
+            <div className="p-2 border-t max-h-32 overflow-y-auto">
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleUserMessage(suggestion)}
+                    className="bg-gray-100 hover:bg-gray-200 rounded-full px-3 py-1 text-sm"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {books.length > 0 && (
+            <div className="border-t p-2 max-h-48 overflow-y-auto">
+              {books.map((book) => (
+                <div
+                  key={book._id}
+                  className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded"
+                >
+                  <BookOpen size={20} className="text-blue-500" />
+                  <div className="flex-1">
+                    <div className="font-medium">{book.title}</div>
+                    <div className="text-sm text-gray-500">
+                      {book.genres?.[0]}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => addToBasket(book)}
+                    className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                  >
+                    Add
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="p-4 border-t">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyPress={(e) =>
+                  e.key === "Enter" && handleUserMessage(inputText)
+                }
+                placeholder="Type a message..."
+                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={() => handleUserMessage(inputText)}
+                disabled={!inputText.trim()}
+                className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+              >
+                <Send size={20} />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -375,4 +309,4 @@ const Chatbot = () => {
   );
 };
 
-export default Chatbot;
+export default EnhancedChatbot;
