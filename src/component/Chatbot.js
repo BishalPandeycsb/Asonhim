@@ -51,7 +51,7 @@ const Chatbot = () => {
       setBooks([]);
       setShowFilters(true); // Show filters when Books category is selected
     } else {
-      window.location.href = `http://localhost:3000/Category/${category.Product}`;
+      window.location.href = `https://ashim-project.vercel.app/Category/${category.Product}`;
     }
   };
 
